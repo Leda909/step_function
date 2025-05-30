@@ -167,3 +167,14 @@ terraform.rc
 .idea
 
 **/.DS_Store
+
+**/terraform_original
+**/.terraform/**
+**/.terraform.lock.hcl
+**.terraform.lock**
+
+
+lambdas/1_one/**
+lambdas/2_two/**
+lambdas/3_three/**
+lambdas/deployment/**
