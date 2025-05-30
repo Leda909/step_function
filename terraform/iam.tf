@@ -85,41 +85,46 @@ resource "aws_iam_role_policy_attachment" "lambda_cw_policy_attachment" {
 # IAM Policy for Step Function to invoke lambdas
 # ------------------------------
 
-# Define policy that allows the Step Function to invokes any lambda(s)
+# Lambda invoke permission policy document
 data "aws_iam_policy_document" "lambda_access_policy" {
   statement {
     effect = "Allow"
     actions = [
-      "lambda:*"
+      "lambda:InvokeFunction"
     ]
-    resources = ["*"]    ## potential vulnerability
+    resources = [
+      aws_lambda_function.lambda_one.arn,
+      aws_lambda_function.lambda_two.arn,
+      aws_lambda_function.lambda_three.arn
+      ]    ## potential vulnerability to use only *
   }
 }
 
-# Create IAM policy for Step Function
-resource "aws_iam_role" "step_functions_role" {
-  name = "step_functions_role"
+# Assume role policy document for Step Functions
+data "aws_iam_policy_document" "step_function_assume_role_policy" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "states.amazonaws.com"
-        }
-      }
-    ]
-  })
+    principals {
+      type        = "Service"
+      identifiers = ["states.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
 
-# Create IAM policy for using the document
+# Create IAM role for Step Function
+resource "aws_iam_role" "step_functions_role" {
+  name = "step_functions_role"
+  assume_role_policy = data.aws_iam_policy_document.step_function_assume_role_policy.json
+}
+
+# Create IAM policy for allow Lambda invocation
 resource "aws_iam_policy" "step_functions_policy_lambda" {
   name   = "policy-stepfunction-invoke-lambdas"
   policy = data.aws_iam_policy_document.lambda_access_policy.json
 }
-
 
 # Attach IAM policy to Step Function IAM role
 resource "aws_iam_role_policy_attachment" "step_functions_to_lambda" {

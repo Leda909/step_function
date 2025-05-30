@@ -1,5 +1,5 @@
 # Step Functions State Machine
-resource "aws_sfn_state_machine" "number_processor_sf" {
+resource "aws_sfn_state_machine" "etl_workflow" {
   name     = "ETL_Data_Orchestra"
   role_arn = aws_iam_role.step_functions_role.arn
 

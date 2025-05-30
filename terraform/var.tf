@@ -27,3 +27,9 @@ variable "python_runtime" {
   type    = string
   default = "python3.13"
 }
+
+variable "notification_email" {
+  description = "Email address to receive Lambda failure notifications"
+  type        = string
+}
+
