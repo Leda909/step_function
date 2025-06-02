@@ -55,7 +55,7 @@ resource "aws_lambda_function" "lambda_one" {
 
   environment {
     variables = {
-      s3_bucket = aws_s3_bucket.first_bucket.bucket
+      BUCKET_ONE = aws_s3_bucket.first_bucket.bucket
     #add the .env? 
     }
   }

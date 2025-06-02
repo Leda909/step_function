@@ -15,6 +15,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_one_error_alarm" {
   }
 }
 
+
 resource "aws_cloudwatch_metric_alarm" "lambda_two_error_alarm" {
   alarm_name          = "lambda-two-error-alarm"
   comparison_operator = "GreaterThanThreshold"

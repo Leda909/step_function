@@ -131,3 +131,33 @@ resource "aws_iam_role_policy_attachment" "step_functions_to_lambda" {
   role       = aws_iam_role.step_functions_role.name
   policy_arn = aws_iam_policy.step_functions_policy_lambda.arn
 }
+
+# ------------------------------
+# IAM policy for EventBridge to invoke Step Functions
+# ------------------------------
+
+data "aws_iam_policy_document" "eventbridge_start_sf" {
+  statement {
+    effect = "Allow"
+    actions = ["states:StartExecution"]
+    resources = [aws_sfn_state_machine.etl_workflow.arn]
+  }
+}
+
+resource "aws_iam_role" "eventbridge_to_step_function" {
+  name               = "eventbridge-to-stepfunction-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = { Service = "events.amazonaws.com" },
+      Action   = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "eventbridge_start_sf_policy" {
+  name   = "eventbridge-start-sf-policy"
+  role   = aws_iam_role.eventbridge_to_step_function.id
+  policy = data.aws_iam_policy_document.eventbridge_start_sf.json
+}
