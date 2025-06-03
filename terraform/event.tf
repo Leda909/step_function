@@ -1,22 +1,33 @@
-# Schedule First Lambda Every 15 Minutes
-resource "aws_cloudwatch_event_rule" "schedule_lambda_one" {
-  name                = "schedule-lambda-one"
-  description         = "Run Lambda One every 15 minutes"
-  schedule_expression = "rate(15 minutes)"
+# ------------------------------
+# Step Function Schedule
+# ------------------------------
+
+resource "aws_cloudwatch_event_rule" "schedule_step_function" {
+  name                = "schedule-stepfunction"
+  description         = "Run Step Function every 5 minutes"
+  schedule_expression = "rate(5 minutes)"
 }
 
-# Link scheduled EventBridge rule to Lambda One
-resource "aws_cloudwatch_event_target" "lambda_one_schedule_target" {
-  rule      = aws_cloudwatch_event_rule.schedule_lambda_one.name
-  target_id = "TriggerLambdaOne"
-  arn       = aws_lambda_function.lambda_one.arn
+resource "aws_cloudwatch_event_target" "trigger_step_function" {
+  rule      = aws_cloudwatch_event_rule.schedule_step_function.name
+  target_id = "StepFunctionTarget"
+  arn       = aws_sfn_state_machine.etl_workflow.arn
+  role_arn  = aws_iam_role.eventbridge_to_step_function.arn
 }
 
-# Allow EventBridge to invoke Lambda One
-resource "aws_lambda_permission" "allow_eventbridge_schedule_lambda_one" {
-  statement_id  = "AllowExecutionFromEventBridge"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.lambda_one.function_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.schedule_lambda_one.arn
-}
+# Schedule Step Function
+# resource "aws_scheduler_schedule" "step" {  ##TODO change the name
+#   name       = "my-step-function-scheduler"
+#   #group_name = "step-function-group"
+
+#   flexible_time_window {
+#     mode = "OFF"
+#   }
+
+#   schedule_expression = "rate(2 minute)"
+
+#   target {
+#     arn      = aws_sfn_state_machine.sfn_state_machine.arn
+#     role_arn = aws_iam_role.step_function_role.arn
+#   }
+# }

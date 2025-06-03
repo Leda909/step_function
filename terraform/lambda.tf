@@ -55,8 +55,7 @@ resource "aws_lambda_function" "lambda_one" {
 
   environment {
     variables = {
-      s3_bucket = aws_s3_bucket.first_bucket.bucket
-    #add the .env? 
+      BUCKET_ONE = aws_s3_bucket.first_bucket.bucket
     }
   }
 }
@@ -73,7 +72,8 @@ resource "aws_lambda_function" "lambda_two" {
 
   environment {
     variables = {
-      s3_bucket = aws_s3_bucket.second_bucket.bucket
+      BUCKET_ONE = aws_s3_bucket.first_bucket.bucket
+      BUCKET_TWO = aws_s3_bucket.second_bucket.bucket
     }
   }
 }
@@ -87,5 +87,11 @@ resource "aws_lambda_function" "lambda_three" {
   runtime          = var.python_runtime
 
   layers = [aws_lambda_layer_version.lambda_layer.arn]
+
+  environment {
+    variables = {
+      BUCKET_TWO = aws_s3_bucket.second_bucket.bucket
+    }
+  }
 }
 
