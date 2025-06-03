@@ -174,11 +174,8 @@ terraform.rc
 **.terraform.lock**
 
 
-lambdas/1_one/**
-lambdas/2_two/**
-lambdas/3_three/**
 lambdas/deployment/**
 
 lambdas/packages
-data
+
 terraform_original
