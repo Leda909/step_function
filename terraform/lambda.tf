@@ -1,26 +1,97 @@
-resource "aws_lambda_function" "number_generator_lambda" {
-  filename      =  data.archive_file.number_generator.output_path
-  source_code_hash = data.archive_file.number_generator.output_base64sha256
-  function_name = "poc_number_generator_lambda"
-  role          = aws_iam_role.example_lambda_role.arn
-  handler       = "1_number_generator/main.handler"
-  runtime = "nodejs18.x"
+# ------------
+# Lambda layer
+# ------------
+
+# ziping the packeges to lambda layer
+data "archive_file" "lambda_layer" {
+  type             = "zip"
+  source_dir       = "${path.module}/../lambdas/packages"
+  output_path      = "${path.module}/../deployment/layers/extract_layer.zip"
 }
 
-resource "aws_lambda_function" "even_lambda" {
-  filename      =  data.archive_file.even.output_path
-  source_code_hash = data.archive_file.even.output_base64sha256
-  function_name = "poc_even_lambda"
-  role          = aws_iam_role.example_lambda_role.arn
-  handler       = "2_even/main.handler"
-  runtime = "nodejs18.x"
+# creating the lambda layer
+resource "aws_lambda_layer_version" "lambda_layer" {
+  layer_name          = "extact_layer"
+  filename = data.archive_file.lambda_layer.output_path
+  source_code_hash    = data.archive_file.lambda_layer.output_base64sha256
+  compatible_runtimes = ["python3.10"]
 }
 
-resource "aws_lambda_function" "odd_lambda" {
-  filename      =  data.archive_file.odd.output_path
-  source_code_hash = data.archive_file.odd.output_base64sha256
-  function_name = "poc_odd_lambda"
-  role          = aws_iam_role.example_lambda_role.arn
-  handler       = "3_odd/main.handler"
-  runtime = "nodejs18.x"
+# -----------------
+# Package lambda source code(s)
+# -----------------
+
+data "archive_file" "lambda_one" {
+  type        = "zip"
+  source_dir  = "../lambdas/1_one/"
+  output_path = "../deployment/one.zip"
 }
+
+data "archive_file" "lambda_two" {
+  type        = "zip"
+  source_dir  = "../lambdas/2_two/"
+  output_path = "../deployment/two.zip"
+}
+
+data "archive_file" "lambda_three" {
+  type        = "zip"
+  source_dir  = "../lambdas/3_three/"
+  output_path = "../deployment/three.zip"
+}
+
+# ------------------------------------
+# Lambda Function Definitions
+# ------------------------------------
+
+resource "aws_lambda_function" "lambda_one" {
+  filename         = data.archive_file.lambda_one.output_path
+  source_code_hash = data.archive_file.lambda_one.output_base64sha256
+  function_name    = var.lambda_one
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "lambda_function.lambda_handler"
+  runtime          = var.python_runtime
+
+  layers = [aws_lambda_layer_version.lambda_layer.arn]
+
+  environment {
+    variables = {
+      BUCKET_ONE = aws_s3_bucket.first_bucket.bucket
+    }
+  }
+}
+
+resource "aws_lambda_function" "lambda_two" {
+  filename         = data.archive_file.lambda_two.output_path
+  source_code_hash = data.archive_file.lambda_two.output_base64sha256
+  function_name    = var.lambda_two
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "lambda_function.lambda_handler"
+  runtime          = var.python_runtime
+
+  layers = [aws_lambda_layer_version.lambda_layer.arn]
+
+  environment {
+    variables = {
+      BUCKET_ONE = aws_s3_bucket.first_bucket.bucket
+      BUCKET_TWO = aws_s3_bucket.second_bucket.bucket
+    }
+  }
+}
+
+resource "aws_lambda_function" "lambda_three" {
+  filename         = data.archive_file.lambda_three.output_path
+  source_code_hash = data.archive_file.lambda_three.output_base64sha256
+  function_name    = var.lambda_three
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "lambda_function.lambda_handler"
+  runtime          = var.python_runtime
+
+  layers = [aws_lambda_layer_version.lambda_layer.arn]
+
+  environment {
+    variables = {
+      BUCKET_TWO = aws_s3_bucket.second_bucket.bucket
+    }
+  }
+}
+
